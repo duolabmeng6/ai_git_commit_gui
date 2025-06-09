@@ -97,7 +97,7 @@ class GitAnalyzerGUI(QMainWindow):
     
     def init_ui(self):
         """初始化用户界面"""
-        self.setWindowTitle("Git AI Commit - 智能提交助手")
+        self.setWindowTitle("Git AI Commit - 智能提交助手 微信:261077")
         self.setMinimumSize(400, 500)  # 减小最小窗口尺寸
         self.resize(400, 550)  # 设置默认窗口大小
         
