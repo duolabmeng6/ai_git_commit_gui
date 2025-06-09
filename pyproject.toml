@@ -1,18 +1,44 @@
 [project]
-name = "git-ai-commit"
+name = "git-ai-commit-gui"
 version = "0.1.0"
-description = "Git AI Commit - 智能提交助手"
+description = "基于AI的Git提交消息生成工具，提供智能分析和规范化的提交消息"
+readme = "README.md"
+license = {text = "MIT"}
 authors = [
-    {name = "Developer", email = "developer@example.com"}
+    {name = "duolabmeng6", email = "1715109585@qq.com"}
+]
+maintainers = [
+    {name = "duolabmeng6", email = "1715109585@qq.com"}
 ]
 requires-python = ">=3.12"
 dependencies = [
     "pyside6>=6.9.1",
     "requests>=2.32.3"
 ]
+keywords = ["git", "ai", "commit", "automation", "gui", "python"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Version Control :: Git",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
+    "Environment :: X11 Applications :: Qt",
+    "Natural Language :: Chinese (Simplified)"
+]
+
+[project.urls]
+Homepage = "https://github.com/duolabmeng6/ai_git_commit_gui"
+Repository = "https://github.com/duolabmeng6/ai_git_commit_gui"
+Issues = "https://github.com/duolabmeng6/ai_git_commit_gui/issues"
+Documentation = "https://github.com/duolabmeng6/ai_git_commit_gui#readme"
 
 [project.scripts]
-git-ai-commit = "gui_main:main"
+git-ai-commit-gui = "gui_main:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -20,6 +46,32 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["."]
+exclude = [
+    "__pycache__",
+    "*.pyc",
+    "*.pyo",
+    "*.pyd",
+    ".git",
+    ".gitignore",
+    "temp",
+    "test.py",
+    "test.txt",
+    "*.log"
+]
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "__pycache__",
+    "*.pyc",
+    "*.pyo",
+    "*.pyd",
+    ".git",
+    ".gitignore",
+    "temp",
+    "test.py",
+    "test.txt",
+    "*.log"
+]
 
 [tool.uv]
 dev-dependencies = []

@@ -2,6 +2,10 @@
 
 > 🤖 基于AI的Git提交消息生成工具，让代码提交更智能、更规范
 
+[![PyPI version](https://badge.fury.io/py/git-ai-commit-gui.svg)](https://pypi.org/project/git-ai-commit-gui/)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 ## 📖 项目介绍
 
 Git AI Commit 是一个现代化的Git提交助手，结合了AI技术和直观的图形界面，帮助开发者：
@@ -29,9 +33,13 @@ Git AI Commit 是一个现代化的Git提交助手，结合了AI技术和直观�
 
 ### 🎯 一键启动 (最简单)
 ```bash
-# 安装uv并直接运行
+# 方式1：使用uv直接安装并运行 (推荐)
 curl -LsSf https://astral.sh/uv/install.sh | sh
-uv run --from git+https://github.com/duolabmeng6/ai_git_commit_gui.git git-ai-commit
+uv tool install git-ai-commit-gui
+git-ai-commit-gui
+
+# 方式2：使用uv临时运行
+uv run --from git-ai-commit-gui git-ai-commit-gui
 ```
 
 ### 系统要求
@@ -41,34 +49,49 @@ uv run --from git+https://github.com/duolabmeng6/ai_git_commit_gui.git git-ai-co
 
 ### 安装方法
 
-#### 使用 uv (推荐)
+#### 🚀 使用 uv (推荐)
 
-**方式1：直接从GitHub运行**
+**方式1：全局安装 (推荐)**
 ```bash
 # 1. 安装 uv (如果尚未安装)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 2. 直接运行项目
-uv run --from git+https://github.com/duolabmeng6/ai_git_commit_gui.git git-ai-commit
+# 2. 安装工具
+uv tool install git-ai-commit-gui
+
+# 3. 直接使用
+git-ai-commit-gui
 ```
 
-**方式2：克隆后运行**
+**方式2：临时运行**
 ```bash
-# 1. 安装 uv (如果尚未安装)
+# 安装uv并临时运行
 curl -LsSf https://astral.sh/uv/install.sh | sh
+uv run --from git-ai-commit-gui git-ai-commit-gui
+```
 
-# 2. 克隆项目
+**方式3：从源码运行**
+```bash
+# 1. 克隆项目
 git clone https://github.com/duolabmeng6/ai_git_commit_gui.git
 cd ai_git_commit_gui
 
-# 3. 安装依赖
+# 2. 安装依赖并运行
 uv sync
-
-# 4. 启动应用
-uv run git-ai-commit
+uv run git-ai-commit-gui
 ```
 
-#### 传统方式
+#### 📦 使用 pip
+
+```bash
+# 安装
+pip install git-ai-commit-gui
+
+# 运行
+git-ai-commit-gui
+```
+
+#### 🛠️ 开发者安装
 
 ```bash
 # 1. 克隆项目
@@ -92,11 +115,11 @@ python gui_main.py
 
 1. **启动应用**
    ```bash
-   # 直接从GitHub启动
-   uv run --from git+https://github.com/duolabmeng6/ai_git_commit_gui.git git-ai-commit
+   # 如果已全局安装
+   git-ai-commit-gui
 
-   # 或者如果已克隆项目
-   uv run git-ai-commit
+   # 或者使用uv临时运行
+   uv run --from git-ai-commit-gui git-ai-commit-gui
    ```
 
 2. **配置API设置**
@@ -137,12 +160,16 @@ uv run python gui_main.py
 **场景1：分析当前项目变更**
 ```bash
 cd /your/project/directory
-uv run git-ai-commit ./
+git-ai-commit-gui ./
 ```
 
 **场景2：快速查看变更内容**
 ```bash
-uv run python git_diff_analyzer.py . 100
+# 如果全局安装了
+git-ai-commit-gui
+
+# 或者使用uv临时运行
+uv run --from git-ai-commit-gui git-ai-commit-gui
 ```
 
 **场景3：AI生成提交消息**

@@ -186,9 +186,13 @@ uv.lock
 
 # Application specific
 .git_analyzer/
-*.txt
-!requirements.txt
-!README.md
+temp/
+test.py
+test.txt
+*.log
+
+# Configuration files with sensitive data
+config_local.json
 
 # OS specific
 .DS_Store
