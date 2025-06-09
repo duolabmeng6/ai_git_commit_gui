@@ -124,38 +124,42 @@ class GLMInterface:
             return None
     
    
-    def generate_commit_message(self, git_analysis: str) -> Optional[str]:
+    def generate_commit_message(self, git_analysis: str, custom_prompt: str = None) -> Optional[str]:
         """
         生成Git提交消息
-        
+
         Args:
             git_analysis: Git分析结果
-            
+            custom_prompt: 自定义提示词，如果为None则使用默认提示词
+
         Returns:
             建议的提交消息
         """
-        prompt = """你是一名专业的软件工程师。    
-仔细审查提供的上下文和即将提交到 Git 仓库的代码变更。    
-为这些变更生成提交信息。    
-提交信息必须使用祈使语气（例如“修复”而不是“修复了”）。    
-提交信息的格式应如下：    
-使用以下前缀：   
-- **修复**（fix）   
-- **功能**（feat）   
-- **构建**（build）   
-- **杂项**（chore）   
-- **持续集成**（ci）   
-- **文档**（docs）   
-- **代码样式**（style）   
-- **重构**（refactor）   
-- **性能**（perf）   
-- **测试**（test）    
-只需回复提交信息本身，不要包含引号、注释或额外说明！    
-示例：   
-`修复 用户登录时的空指针异常`   
-`功能 添加用户注册接口`   
-`重构 优化订单处理逻辑`
-        """
+        if custom_prompt:
+            prompt = custom_prompt
+        else:
+            # 默认提示词
+            prompt = """你是一名专业的软件工程师。
+仔细审查提供的上下文和即将提交到 Git 仓库的代码变更。
+为这些变更生成提交信息。
+提交信息必须使用祈使语气（例如“修复”而不是“修复了”）。
+提交信息的格式应如下：
+使用以下前缀：
+- **修复**（fix）
+- **功能**（feat）
+- **构建**（build）
+- **杂项**（chore）
+- **持续集成**（ci）
+- **文档**（docs）
+- **代码样式**（style）
+- **重构**（refactor）
+- **性能**（perf）
+- **测试**（test）
+只需回复提交信息本身，不要包含引号、注释或额外说明！
+示例：
+`修复 用户登录时的空指针异常`
+`功能 添加用户注册接口`
+`重构 优化订单处理逻辑`"""
 
         return self.call_ai(prompt, git_analysis, temperature=0.3)
     
@@ -247,4 +251,4 @@ def demo_commit_message():
 
 
 if __name__ == "__main__":
-    main()
+    demo_commit_message()

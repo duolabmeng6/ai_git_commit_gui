@@ -28,11 +28,34 @@ class ConfigManager:
     
     def _load_default_config(self) -> Dict[str, Any]:
         """加载默认配置"""
+        default_prompt = """你是一名专业的软件工程师。
+仔细审查提供的上下文和即将提交到 Git 仓库的代码变更。
+为这些变更生成提交信息。
+提交信息必须使用祈使语气（例如"修复"而不是"修复了"）。
+提交信息的格式应如下：
+使用以下前缀：
+- **修复**（fix）
+- **功能**（feat）
+- **构建**（build）
+- **杂项**（chore）
+- **持续集成**（ci）
+- **文档**（docs）
+- **代码样式**（style）
+- **重构**（refactor）
+- **性能**（perf）
+- **测试**（test）
+只需回复提交信息本身，不要包含引号、注释或额外说明！
+示例：
+`修复 用户登录时的空指针异常`
+`功能 添加用户注册接口`
+`重构 优化订单处理逻辑`"""
+
         return {
             "api": {
                 "url": "https://api.kenhong.com/v1",
                 "api_key": "",
-                "model": "glm-4-flash"
+                "model": "glm-4-flash",
+                "prompt": default_prompt
             },
             "ui": {
                 "window_width": 400,
@@ -119,14 +142,17 @@ class ConfigManager:
         return {
             "url": self.get("api.url", ""),
             "api_key": self.get("api.api_key", ""),
-            "model": self.get("api.model", "glm-4-flash")
+            "model": self.get("api.model", "glm-4-flash"),
+            "prompt": self.get("api.prompt", "")
         }
     
-    def set_api_config(self, url: str, api_key: str, model: str) -> None:
+    def set_api_config(self, url: str, api_key: str, model: str, prompt: str = None) -> None:
         """设置API配置"""
         self.set("api.url", url)
         self.set("api.api_key", api_key)
         self.set("api.model", model)
+        if prompt is not None:
+            self.set("api.prompt", prompt)
         self.save_config()
     
     def get_ui_config(self) -> Dict[str, Any]:

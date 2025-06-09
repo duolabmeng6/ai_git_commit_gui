@@ -62,7 +62,12 @@ class AIAnalysisWorker(QThread):
                 self.api_config["url"],
                 self.api_config["model"]
             )
-            result = ai.generate_commit_message(self.git_analysis)
+            # 使用自定义提示词（如果有的话）
+            custom_prompt = self.api_config.get("prompt", "").strip()
+            result = ai.generate_commit_message(
+                self.git_analysis,
+                custom_prompt if custom_prompt else None
+            )
             if result:
                 self.finished.emit(result)
             else:
@@ -78,10 +83,13 @@ class GitAnalyzerGUI(QMainWindow):
         super().__init__()
         self.current_repo_path = ""
         self.git_analysis_result = ""
-        
+
         # 工作线程
         self.git_worker = None
         self.ai_worker = None
+
+        # 自动流程状态管理
+        self.auto_process_state = "IDLE"  # IDLE, GIT_ANALYSIS, AI_ANALYSIS, COMMIT
         
         self.init_ui()
         self.load_settings()
@@ -159,9 +167,14 @@ class GitAnalyzerGUI(QMainWindow):
         self.commit_btn.clicked.connect(self.git_commit)
         self.commit_btn.setEnabled(False)
 
+        self.auto_process_btn = QPushButton("一键处理")
+        self.auto_process_btn.clicked.connect(self.auto_process)
+        self.auto_process_btn.setEnabled(False)
+
         button_layout.addWidget(self.view_changes_btn)
         button_layout.addWidget(self.ai_summary_btn)
         button_layout.addWidget(self.commit_btn)
+        button_layout.addWidget(self.auto_process_btn)
 
         code_layout.addLayout(button_layout)
         
@@ -232,6 +245,22 @@ class GitAnalyzerGUI(QMainWindow):
 
         api_layout.addLayout(api_grid)
 
+        # 提示词设置
+        prompt_label = QLabel("AI提示词:")
+        prompt_label.setAlignment(Qt.AlignTop)
+        self.prompt_edit = QTextEdit()
+        self.prompt_edit.setPlaceholderText("请输入AI生成提交消息的提示词...")
+        self.prompt_edit.setMaximumHeight(120)  # 限制高度
+        self.prompt_edit.setMinimumHeight(80)   # 最小高度
+
+        # 创建提示词的网格布局
+        prompt_grid = QGridLayout()
+        prompt_grid.addWidget(prompt_label, 0, 0)
+        prompt_grid.addWidget(self.prompt_edit, 0, 1)
+        prompt_grid.setColumnStretch(1, 1)  # 让文本框可以拉伸
+
+        api_layout.addLayout(prompt_grid)
+
         # 保存按钮区域
         button_layout = QHBoxLayout()
         button_layout.addStretch()
@@ -275,6 +304,7 @@ class GitAnalyzerGUI(QMainWindow):
         self.api_url_edit.setText(api_config["url"])
         self.api_key_edit.setText(api_config["api_key"])
         self.model_name_edit.setText(api_config["model"])
+        self.prompt_edit.setPlainText(api_config["prompt"])
 
         # 加载UI设置
         ui_config = config_manager.get_ui_config()
@@ -292,7 +322,8 @@ class GitAnalyzerGUI(QMainWindow):
         config_manager.set_api_config(
             self.api_url_edit.text().strip(),
             self.api_key_edit.text().strip(),
-            self.model_name_edit.text().strip()
+            self.model_name_edit.text().strip(),
+            self.prompt_edit.toPlainText().strip()
         )
 
         # 保存UI设置
@@ -322,11 +353,13 @@ class GitAnalyzerGUI(QMainWindow):
         if self.current_repo_path and is_git_repository(self.current_repo_path):
             self.statusBar().showMessage(f"Git仓库: {self.current_repo_path}")
             self.view_changes_btn.setEnabled(True)
+            self.auto_process_btn.setEnabled(True)
         else:
             self.statusBar().showMessage("请选择有效的Git仓库")
             self.view_changes_btn.setEnabled(False)
             self.ai_summary_btn.setEnabled(False)
             self.commit_btn.setEnabled(False)
+            self.auto_process_btn.setEnabled(False)
 
     def view_git_changes(self):
         """查看Git变更"""
@@ -356,14 +389,35 @@ class GitAnalyzerGUI(QMainWindow):
         """Git分析完成"""
         self.git_analysis_result = result
         self.changes_text.setPlainText(result)
-        self.view_changes_btn.setEnabled(True)
-        self.ai_summary_btn.setEnabled(True)
-        self.statusBar().showMessage("Git变更分析完成")
+
+        # 检查是否在自动流程中
+        if self.auto_process_state == "GIT_ANALYSIS":
+            # 自动流程：继续AI分析
+            self.auto_process_state = "AI_ANALYSIS"
+            self.statusBar().showMessage("一键处理：正在进行AI分析...")
+            self.ai_analyze_changes()
+        else:
+            # 手动操作：恢复按钮状态
+            self.view_changes_btn.setEnabled(True)
+            self.ai_summary_btn.setEnabled(True)
+            self.auto_process_btn.setEnabled(True)
+            self.statusBar().showMessage("Git变更分析完成")
 
     def on_git_analysis_error(self, error: str):
         """Git分析错误"""
+        # 重置自动流程状态
+        if self.auto_process_state != "IDLE":
+            self.auto_process_state = "IDLE"
+            self.statusBar().showMessage("一键处理失败：Git变更分析失败")
+        else:
+            self.statusBar().showMessage("Git变更分析失败")
+
+        # 恢复按钮状态
         self.view_changes_btn.setEnabled(True)
-        self.statusBar().showMessage("Git变更分析失败")
+        self.ai_summary_btn.setEnabled(False)
+        self.commit_btn.setEnabled(False)
+        self.auto_process_btn.setEnabled(True)
+
         QMessageBox.critical(self, "错误", f"Git分析失败：{error}")
 
     def ai_analyze_changes(self):
@@ -392,15 +446,67 @@ class GitAnalyzerGUI(QMainWindow):
     def on_ai_analysis_finished(self, result: str):
         """AI分析完成"""
         self.ai_result_text.setPlainText(result)
-        self.ai_summary_btn.setEnabled(True)
-        self.commit_btn.setEnabled(True)
-        self.statusBar().showMessage("AI分析完成")
+
+        # 检查是否在自动流程中
+        if self.auto_process_state == "AI_ANALYSIS":
+            # 自动流程：继续Git提交
+            self.auto_process_state = "COMMIT"
+            self.statusBar().showMessage("一键处理：正在执行Git提交...")
+            self.git_commit()
+        else:
+            # 手动操作：恢复按钮状态
+            self.ai_summary_btn.setEnabled(True)
+            self.commit_btn.setEnabled(True)
+            self.auto_process_btn.setEnabled(True)
+            self.statusBar().showMessage("AI分析完成")
 
     def on_ai_analysis_error(self, error: str):
         """AI分析错误"""
+        # 重置自动流程状态
+        if self.auto_process_state != "IDLE":
+            self.auto_process_state = "IDLE"
+            self.statusBar().showMessage("一键处理失败：AI分析失败")
+        else:
+            self.statusBar().showMessage("AI分析失败")
+
+        # 恢复按钮状态
+        self.view_changes_btn.setEnabled(True)
         self.ai_summary_btn.setEnabled(True)
-        self.statusBar().showMessage("AI分析失败")
+        self.commit_btn.setEnabled(False)
+        self.auto_process_btn.setEnabled(True)
+
         QMessageBox.critical(self, "错误", f"AI分析失败：{error}")
+
+    def auto_process(self):
+        """一键处理：自动执行查看变更→AI分析→Git提交"""
+        # 检查仓库路径
+        if not self.current_repo_path:
+            QMessageBox.warning(self, "警告", "请先选择Git仓库路径")
+            return
+
+        if not is_git_repository(self.current_repo_path):
+            QMessageBox.warning(self, "警告", "选择的路径不是有效的Git仓库")
+            return
+
+        # 检查API配置
+        api_config = config_manager.get_api_config()
+        if not api_config["api_key"]:
+            QMessageBox.warning(self, "警告", "请先在设置中配置API密钥")
+            self.tab_widget.setCurrentIndex(1)  # 切换到设置标签页
+            return
+
+        # 开始自动流程
+        self.auto_process_state = "GIT_ANALYSIS"
+        self.statusBar().showMessage("一键处理：正在分析Git变更...")
+
+        # 禁用所有按钮
+        self.view_changes_btn.setEnabled(False)
+        self.ai_summary_btn.setEnabled(False)
+        self.commit_btn.setEnabled(False)
+        self.auto_process_btn.setEnabled(False)
+
+        # 启动Git分析
+        self.view_git_changes()
 
     def git_commit(self):
         """执行Git提交"""
@@ -428,15 +534,38 @@ class GitAnalyzerGUI(QMainWindow):
                 check=True
             )
 
-            self.statusBar().showMessage("Git提交成功")
+            # 检查是否在自动流程中
+            if self.auto_process_state == "COMMIT":
+                self.statusBar().showMessage("一键处理完成：Git提交成功")
+                self.auto_process_state = "IDLE"
+            else:
+                self.statusBar().showMessage("Git提交成功")
 
             # 清空文本框
             self.changes_text.clear()
             self.ai_result_text.clear()
             self.git_analysis_result = ""
+
+            # 恢复按钮状态
+            self.view_changes_btn.setEnabled(True)
+            self.ai_summary_btn.setEnabled(False)
             self.commit_btn.setEnabled(False)
+            self.auto_process_btn.setEnabled(True)
 
         except subprocess.CalledProcessError as e:
+            # 重置自动流程状态
+            if self.auto_process_state != "IDLE":
+                self.auto_process_state = "IDLE"
+                self.statusBar().showMessage("一键处理失败：Git提交失败")
+            else:
+                self.statusBar().showMessage("Git提交失败")
+
+            # 恢复按钮状态
+            self.view_changes_btn.setEnabled(True)
+            self.ai_summary_btn.setEnabled(True)
+            self.commit_btn.setEnabled(True)
+            self.auto_process_btn.setEnabled(True)
+
             QMessageBox.critical(self, "错误", f"Git提交失败：{e}")
         
 
