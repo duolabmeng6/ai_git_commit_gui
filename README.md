@@ -5,7 +5,7 @@
 [![PyPI version](https://badge.fury.io/py/git-ai-commit-gui.svg)](https://pypi.org/project/git-ai-commit-gui/)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
+![alt text](image.png)
 ## 📖 项目介绍
 
 Git AI Commit 是一个现代化的Git提交助手，结合了AI技术和直观的图形界面，帮助开发者：
@@ -306,3 +306,6 @@ rm -rf ~/.git_ai_commit/config.json
 ---
 
 ⭐ 如果这个项目对你有帮助，请给它一个星标！
+
+# 打赏
+![alt text](image-1.png)
