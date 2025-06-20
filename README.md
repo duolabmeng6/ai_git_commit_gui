@@ -21,6 +21,7 @@ Git AI Commit 是一个现代化的Git提交助手，结合了AI技术和直观�
 - 🔍 **Git变更分析**：深度分析代码变更，识别修改、新增、删除的文件
 - 📝 **智能提交消息**：基于变更内容生成符合规范的提交消息
 - 🎯 **一键提交**：分析、生成、提交一站式完成
+- ⚡ **自动模式 (--auto)**：命令行自动执行完整流程，无需GUI交互
 - 💾 **配置管理**：持久化保存API配置和用户偏好
 
 ### 界面特性
@@ -32,6 +33,17 @@ Git AI Commit 是一个现代化的Git提交助手，结合了AI技术和直观�
 ## 🚀 快速开始
 
 ### 🎯 一键启动 (最简单)
+
+#### ⚡ 极速自动模式 (推荐)
+```bash
+# 安装并自动提交 - 无需GUI交互
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv tool install git-ai-commit-gui
+cd /your/git/project
+git-ai-commit-gui --auto
+```
+
+#### 🖥️ GUI界面模式
 ```bash
 # 方式1：使用uv直接安装并运行 (推荐)
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -141,29 +153,71 @@ python gui_main.py
 
 ### 命令行使用
 
+#### 🚀 自动模式 (--auto 加速器)
+
+**一键自动提交** - 无需手动操作，自动完成整个流程：
+```bash
+# 自动模式：分析变更 → AI生成提交消息 → 自动提交 → 关闭程序
+git-ai-commit-gui --auto
+
+# 指定仓库路径的自动模式
+git-ai-commit-gui /path/to/repo --auto
+
+# 使用当前目录的自动模式
+git-ai-commit-gui ./ --auto
+
+# 从源码运行自动模式
+uv run python gui_main.py --auto
+```
+
+**自动模式特性：**
+- ⚡ **极速提交**：无需GUI交互，命令行一键完成
+- 🤖 **智能检测**：自动验证Git仓库和API配置
+- 🔄 **完整流程**：Git分析 → AI生成 → 自动提交
+- 🛡️ **安全退出**：遇到错误自动停止并显示详细信息
+- 📝 **实时反馈**：控制台显示执行进度和结果
+
+#### 📋 手动模式 (GUI界面)
+
 ```bash
 # 分析指定仓库的变更
 uv run python git_diff_analyzer.py /path/to/repo 200
 
 # 启动GUI并指定仓库路径
-uv run git-ai-commit /path/to/repo
+git-ai-commit-gui /path/to/repo
 
 # 使用当前目录
-uv run git-ai-commit ./
+git-ai-commit-gui ./
 
 # 直接启动GUI（会使用当前目录）
 uv run python gui_main.py
+
+# 查看帮助信息
+git-ai-commit-gui --help
 ```
 
 ### 使用示例
 
-**场景1：分析当前项目变更**
+**场景1：🚀 极速自动提交 (推荐)**
 ```bash
+# 进入项目目录，一键自动提交
 cd /your/project/directory
-git-ai-commit-gui ./
+git-ai-commit-gui --auto
+
+# 输出示例：
+# 自动模式：开始检查仓库路径: /your/project/directory
+# 自动模式：仓库路径有效，检查API配置...
+# 开始自动执行一键处理...
+# 自动处理完成：Git提交成功
 ```
 
-**场景2：快速查看变更内容**
+**场景2：指定仓库的自动提交**
+```bash
+# 无需进入目录，直接指定路径自动提交
+git-ai-commit-gui /path/to/another/repo --auto
+```
+
+**场景3：快速查看变更内容 (GUI模式)**
 ```bash
 # 如果全局安装了
 git-ai-commit-gui
@@ -172,12 +226,25 @@ git-ai-commit-gui
 uv run --from git-ai-commit-gui git-ai-commit-gui
 ```
 
-**场景3：AI生成提交消息**
+**场景4：手动AI生成提交消息 (GUI模式)**
 1. 在GUI中点击"查看变更信息"
 2. 查看分析结果
 3. 点击"AI总结变更"
 4. 确认生成的提交消息
 5. 点击"Git Commit"完成提交
+
+**场景5：CI/CD集成自动提交**
+```bash
+# 在CI/CD脚本中使用自动模式
+#!/bin/bash
+cd $PROJECT_DIR
+git add .
+if git diff --cached --quiet; then
+    echo "没有变更需要提交"
+else
+    git-ai-commit-gui --auto
+fi
+```
 
 ## ⚙️ 配置说明
 
@@ -259,6 +326,29 @@ A: 目前支持：
 - 执行git add和git commit
 - 不支持push操作（需手动执行）
 
+### Q: 自动模式 (--auto) 如何工作？
+A: 自动模式会按顺序执行以下步骤：
+1. 检查指定路径是否为有效的Git仓库
+2. 验证API配置是否完整
+3. 分析Git变更内容
+4. 调用AI生成提交消息
+5. 执行 `git add .` 和 `git commit`
+6. 自动关闭程序
+
+### Q: 自动模式失败了怎么办？
+A: 自动模式会在控制台显示详细的错误信息：
+- **无效Git仓库**：确保在Git仓库目录中运行
+- **API配置错误**：先运行GUI模式配置API密钥
+- **没有变更**：确保有未提交的文件变更
+- **网络问题**：检查网络连接和API服务状态
+
+### Q: 自动模式适合什么场景？
+A: 自动模式特别适合：
+- 🚀 **快速开发**：频繁的小改动快速提交
+- 🤖 **CI/CD集成**：自动化构建流程中的提交
+- ⚡ **命令行工作流**：不想打开GUI的开发者
+- 📝 **批量处理**：脚本化处理多个仓库
+
 ## 🔧 故障排除
 
 ### 依赖安装问题
@@ -309,3 +399,5 @@ rm -rf ~/.git_ai_commit/config.json
 
 # 打赏
 ![alt text](image-1.png)
+
+<!-- 测试自动模式功能 -->
