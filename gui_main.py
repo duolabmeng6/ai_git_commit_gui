@@ -309,7 +309,8 @@ class GitAnalyzerGUI(QMainWindow):
 
     def auto_execute(self):
         """自动执行一键处理"""
-        print(f"自动模式：开始检查仓库路径: {self.current_repo_path}")
+        print(f"自动模式：传入的初始路径: {self.initial_repo_path}")
+        print(f"自动模式：当前仓库路径: {self.current_repo_path}")
 
         # 检查仓库路径是否有效
         if not self.current_repo_path or not is_git_repository(self.current_repo_path):
@@ -647,7 +648,8 @@ def main():
                        help="自动执行一键处理并关闭窗口")
     args = parser.parse_args()
 
-    app = QApplication(sys.argv)
+    # 创建QApplication时只传递程序名，避免Qt解析我们的自定义参数
+    app = QApplication([sys.argv[0]])
     app.setApplicationName("Git AI Commit")
     app.setApplicationVersion("1.0.0")
 
