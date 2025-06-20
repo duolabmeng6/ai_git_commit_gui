@@ -8,6 +8,7 @@ Git AI Commit GUI主界面
 import sys
 import os
 import subprocess
+import argparse
 from pathlib import Path
 from typing import Optional
 
@@ -78,11 +79,13 @@ class AIAnalysisWorker(QThread):
 
 class GitAnalyzerGUI(QMainWindow):
     """Git分析器主界面"""
-    
-    def __init__(self):
+
+    def __init__(self, repo_path: str = "./", auto_mode: bool = False):
         super().__init__()
         self.current_repo_path = ""
         self.git_analysis_result = ""
+        self.initial_repo_path = repo_path
+        self.auto_mode = auto_mode
 
         # 工作线程
         self.git_worker = None
@@ -90,10 +93,14 @@ class GitAnalyzerGUI(QMainWindow):
 
         # 自动流程状态管理
         self.auto_process_state = "IDLE"  # IDLE, GIT_ANALYSIS, AI_ANALYSIS, COMMIT
-        
+
         self.init_ui()
         self.load_settings()
         self.setup_auto_path()
+
+        # 如果是自动模式，设置定时器自动执行
+        if self.auto_mode:
+            self.setup_auto_execution()
     
     def init_ui(self):
         """初始化用户界面"""
@@ -278,24 +285,46 @@ class GitAnalyzerGUI(QMainWindow):
     
     def setup_auto_path(self):
         """自动设置路径"""
-        # 如果没有传入路径，自动获取当前目录
         current_dir = os.getcwd()
-        
-        # 检查命令行参数
-        if len(sys.argv) > 1:
-            input_path = sys.argv[1]
-            # 如果是相对路径"./"，转换为绝对路径
-            if input_path == "./":
-                resolved_path = normalize_path(current_dir)
-            else:
-                resolved_path = normalize_path(input_path)
-        else:
-            # 没有传入路径，使用当前目录
+
+        # 使用传入的路径参数
+        input_path = self.initial_repo_path
+        # 如果是相对路径"./"，转换为绝对路径
+        if input_path == "./":
             resolved_path = normalize_path(current_dir)
-        
+        else:
+            resolved_path = normalize_path(input_path)
+
         # 设置路径
         self.repo_path_edit.setText(resolved_path)
         self.current_repo_path = resolved_path
+
+    def setup_auto_execution(self):
+        """设置自动执行"""
+        # 使用定时器延迟执行，确保GUI完全初始化
+        self.auto_timer = QTimer()
+        self.auto_timer.setSingleShot(True)
+        self.auto_timer.timeout.connect(self.auto_execute)
+        self.auto_timer.start(1000)  # 1秒后执行
+
+    def auto_execute(self):
+        """自动执行一键处理"""
+        # 检查仓库路径是否有效
+        if not self.current_repo_path or not is_git_repository(self.current_repo_path):
+            print(f"错误：无效的Git仓库路径: {self.current_repo_path}")
+            QApplication.quit()
+            return
+
+        # 检查API配置
+        api_config = config_manager.get_api_config()
+        if not api_config["api_key"]:
+            print("错误：未配置API密钥，请先在设置中配置")
+            QApplication.quit()
+            return
+
+        print("开始自动执行一键处理...")
+        # 触发自动处理
+        self.auto_process()
 
     def load_settings(self):
         """加载设置"""
@@ -409,6 +438,12 @@ class GitAnalyzerGUI(QMainWindow):
         if self.auto_process_state != "IDLE":
             self.auto_process_state = "IDLE"
             self.statusBar().showMessage("一键处理失败：Git变更分析失败")
+
+            # 如果是自动模式，打印错误并退出
+            if self.auto_mode:
+                print(f"自动处理失败：Git变更分析失败: {error}")
+                QApplication.quit()
+                return
         else:
             self.statusBar().showMessage("Git变更分析失败")
 
@@ -466,6 +501,12 @@ class GitAnalyzerGUI(QMainWindow):
         if self.auto_process_state != "IDLE":
             self.auto_process_state = "IDLE"
             self.statusBar().showMessage("一键处理失败：AI分析失败")
+
+            # 如果是自动模式，打印错误并退出
+            if self.auto_mode:
+                print(f"自动处理失败：AI分析失败: {error}")
+                QApplication.quit()
+                return
         else:
             self.statusBar().showMessage("AI分析失败")
 
@@ -538,6 +579,12 @@ class GitAnalyzerGUI(QMainWindow):
             if self.auto_process_state == "COMMIT":
                 self.statusBar().showMessage("一键处理完成：Git提交成功")
                 self.auto_process_state = "IDLE"
+
+                # 如果是自动模式，完成后自动关闭
+                if self.auto_mode:
+                    print("自动处理完成：Git提交成功")
+                    QApplication.quit()
+                    return
             else:
                 self.statusBar().showMessage("Git提交成功")
 
@@ -557,6 +604,12 @@ class GitAnalyzerGUI(QMainWindow):
             if self.auto_process_state != "IDLE":
                 self.auto_process_state = "IDLE"
                 self.statusBar().showMessage("一键处理失败：Git提交失败")
+
+                # 如果是自动模式，打印错误并退出
+                if self.auto_mode:
+                    print(f"自动处理失败：Git提交失败: {e}")
+                    QApplication.quit()
+                    return
             else:
                 self.statusBar().showMessage("Git提交失败")
 
@@ -582,12 +635,20 @@ class GitAnalyzerGUI(QMainWindow):
 
 def main():
     """主函数"""
+    # 解析命令行参数
+    parser = argparse.ArgumentParser(description="Git AI Commit - 智能提交助手")
+    parser.add_argument("repo_path", nargs="?", default="./",
+                       help="Git仓库路径 (默认: 当前目录)")
+    parser.add_argument("--auto", action="store_true",
+                       help="自动执行一键处理并关闭窗口")
+    args = parser.parse_args()
+
     app = QApplication(sys.argv)
     app.setApplicationName("Git AI Commit")
     app.setApplicationVersion("1.0.0")
 
-    # 创建主窗口
-    window = GitAnalyzerGUI()
+    # 创建主窗口，传入解析的参数
+    window = GitAnalyzerGUI(repo_path=args.repo_path, auto_mode=args.auto)
     window.show()
 
     sys.exit(app.exec())
