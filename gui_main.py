@@ -327,7 +327,7 @@ class GitAnalyzerGUI(QMainWindow):
             return
 
         print("开始自动执行一键处理...")
-        # 触发自动处理
+        # 触发自动处理 - 测试自动模式功能
         self.auto_process()
 
     def load_settings(self):
