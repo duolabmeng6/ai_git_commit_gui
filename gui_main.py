@@ -309,11 +309,15 @@ class GitAnalyzerGUI(QMainWindow):
 
     def auto_execute(self):
         """自动执行一键处理"""
+        print(f"自动模式：开始检查仓库路径: {self.current_repo_path}")
+
         # 检查仓库路径是否有效
         if not self.current_repo_path or not is_git_repository(self.current_repo_path):
             print(f"错误：无效的Git仓库路径: {self.current_repo_path}")
             QApplication.quit()
             return
+
+        print("自动模式：仓库路径有效，检查API配置...")
 
         # 检查API配置
         api_config = config_manager.get_api_config()
