@@ -400,4 +400,4 @@ rm -rf ~/.git_ai_commit/config.json
 # 打赏
 ![alt text](image-1.png)
 
-<!-- 测试自动模式功能 -->
+<!-- 测试路径解析修复 -->

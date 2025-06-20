@@ -309,8 +309,7 @@ class GitAnalyzerGUI(QMainWindow):
 
     def auto_execute(self):
         """自动执行一键处理"""
-        print(f"自动模式：传入的初始路径: {self.initial_repo_path}")
-        print(f"自动模式：当前仓库路径: {self.current_repo_path}")
+        print(f"自动模式：开始检查仓库路径: {self.current_repo_path}")
 
         # 检查仓库路径是否有效
         if not self.current_repo_path or not is_git_repository(self.current_repo_path):
@@ -328,7 +327,7 @@ class GitAnalyzerGUI(QMainWindow):
             return
 
         print("开始自动执行一键处理...")
-        # 触发自动处理 - 测试自动模式功能
+        # 触发自动处理
         self.auto_process()
 
     def load_settings(self):
