@@ -302,6 +302,22 @@ uv run black .
 uv run isort .
 ```
 
+## 🔄 升级指南
+
+### 快速升级
+
+**使用 uv tool (推荐):**
+```bash
+uv tool upgrade git-ai-commit-gui
+```
+
+**使用 pip:**
+```bash
+pip install --upgrade git-ai-commit-gui
+```
+
+详细升级指南请查看：[UPGRADE_GUIDE.md](UPGRADE_GUIDE.md)
+
 ## ❓ 常见问题
 
 ### Q: 如何获取API密钥？
