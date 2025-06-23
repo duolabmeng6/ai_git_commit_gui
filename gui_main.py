@@ -23,7 +23,7 @@ from PySide6.QtGui import QFont, QIcon
 from config import config_manager
 from git_diff_analyzer import GitDiffAnalyzer
 from ai_interface import create_ai_interface
-from utils import is_git_repository, normalize_path
+from utils import is_git_repository, normalize_path, safe_subprocess_run
 
 
 class GitAnalysisWorker(QThread):
@@ -566,14 +566,14 @@ class GitAnalyzerGUI(QMainWindow):
 
         try:
             # 执行git add .
-            subprocess.run(
+            safe_subprocess_run(
                 ["git", "add", "."],
                 cwd=self.current_repo_path,
                 check=True
             )
 
             # 执行git commit
-            subprocess.run(
+            safe_subprocess_run(
                 ["git", "commit", "-m", commit_message],
                 cwd=self.current_repo_path,
                 check=True

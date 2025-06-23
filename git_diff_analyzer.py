@@ -9,6 +9,7 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import List, Dict, Optional
+from utils import safe_subprocess_run
 
 
 class GitDiffAnalyzer:
@@ -34,11 +35,10 @@ class GitDiffAnalyzer:
     def validate_repo(self) -> bool:
         """验证是否为有效的Git仓库"""
         try:
-            result = subprocess.run(
+            result = safe_subprocess_run(
                 ['git', 'rev-parse', '--git-dir'],
                 cwd=self.repo_path,
                 capture_output=True,
-                text=True,
                 check=True
             )
             return True
@@ -54,11 +54,10 @@ class GitDiffAnalyzer:
         
         # 通过Git判断
         try:
-            result = subprocess.run(
+            result = safe_subprocess_run(
                 ['git', 'diff', '--numstat', 'HEAD', '--', file_path],
                 cwd=self.repo_path,
-                capture_output=True,
-                text=True
+                capture_output=True
             )
             if result.returncode == 0 and result.stdout.strip():
                 # Git numstat输出格式: additions deletions filename
@@ -75,11 +74,10 @@ class GitDiffAnalyzer:
         """获取未暂存的文件列表"""
         try:
             # 获取工作区状态
-            result = subprocess.run(
+            result = safe_subprocess_run(
                 ['git', 'status', '--porcelain'],
                 cwd=self.repo_path,
                 capture_output=True,
-                text=True,
                 check=True
             )
             
@@ -133,11 +131,10 @@ class GitDiffAnalyzer:
             
             elif file_status == 'deleted':
                 # 删除的文件，显示原内容
-                result = subprocess.run(
+                result = safe_subprocess_run(
                     ['git', 'show', f'HEAD:{file_path}'],
                     cwd=self.repo_path,
-                    capture_output=True,
-                    text=True
+                    capture_output=True
                 )
                 if result.returncode == 0:
                     return f"--- 删除文件内容 ---\n{result.stdout}"
@@ -145,24 +142,22 @@ class GitDiffAnalyzer:
             
             else:
                 # 修改的文件，获取diff
-                result = subprocess.run(
+                result = safe_subprocess_run(
                     ['git', 'diff', 'HEAD', '--', file_path],
                     cwd=self.repo_path,
-                    capture_output=True,
-                    text=True
+                    capture_output=True
                 )
-                
+
                 if result.returncode == 0 and result.stdout:
                     return result.stdout
                 
                 # 如果没有与HEAD的diff，可能是暂存区的变更
-                result = subprocess.run(
+                result = safe_subprocess_run(
                     ['git', 'diff', '--', file_path],
                     cwd=self.repo_path,
-                    capture_output=True,
-                    text=True
+                    capture_output=True
                 )
-                
+
                 if result.returncode == 0:
                     return result.stdout
         

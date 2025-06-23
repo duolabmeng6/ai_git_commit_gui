@@ -1,6 +1,6 @@
 [project]
 name = "git-ai-commit-gui"
-version = "0.2.0"
+version = "0.2.1"
 description = "基于AI的Git提交消息生成工具，提供智能分析和规范化的提交消息"
 readme = "README.md"
 license = {text = "MIT"}

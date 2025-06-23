@@ -6,6 +6,7 @@
 """
 
 import os
+import locale
 from pathlib import Path
 from typing import Optional, List, Tuple
 import re
@@ -278,22 +279,136 @@ def extract_file_extension(file_path: str) -> str:
     return Path(file_path).suffix.lower()
 
 
+def safe_subprocess_run(
+    cmd: List[str],
+    cwd: Optional[str] = None,
+    capture_output: bool = True,
+    check: bool = False,
+    timeout: Optional[int] = None,
+    **kwargs
+) -> subprocess.CompletedProcess:
+    """
+    安全的subprocess.run包装函数，处理编码问题
+
+    Args:
+        cmd: 要执行的命令列表
+        cwd: 工作目录
+        capture_output: 是否捕获输出
+        check: 是否检查返回码
+        timeout: 超时时间
+        **kwargs: 其他subprocess.run参数
+
+    Returns:
+        subprocess.CompletedProcess对象
+
+    Raises:
+        subprocess.CalledProcessError: 当check=True且命令失败时
+        subprocess.TimeoutExpired: 当超时时
+    """
+    # 移除text参数，我们将手动处理编码
+    kwargs.pop('text', None)
+    kwargs.pop('encoding', None)
+
+    # 尝试的编码列表
+    encodings_to_try = ['utf-8']
+
+    # 根据系统添加合适的编码
+    try:
+        system_encoding = locale.getpreferredencoding()
+        if system_encoding and system_encoding.lower() not in ['utf-8', 'utf8']:
+            encodings_to_try.append(system_encoding)
+    except:
+        pass
+
+    # Windows系统添加常见编码
+    if os.name == 'nt':
+        encodings_to_try.extend(['gbk', 'gb2312', 'cp936'])
+
+    # 添加兜底编码
+    encodings_to_try.append('latin-1')
+
+    # 执行命令
+    result = subprocess.run(
+        cmd,
+        cwd=cwd,
+        capture_output=capture_output,
+        check=False,  # 我们稍后手动检查
+        timeout=timeout,
+        **kwargs
+    )
+
+    # 处理输出编码
+    if capture_output:
+        stdout_decoded = None
+        stderr_decoded = None
+        encoding_used = None
+
+        # 尝试解码stdout
+        if result.stdout:
+            for encoding in encodings_to_try:
+                try:
+                    stdout_decoded = result.stdout.decode(encoding)
+                    encoding_used = encoding
+                    break
+                except UnicodeDecodeError:
+                    continue
+
+            if stdout_decoded is None:
+                # 如果所有编码都失败，使用errors='replace'
+                stdout_decoded = result.stdout.decode('utf-8', errors='replace')
+                encoding_used = 'utf-8 (with errors replaced)'
+
+        # 尝试解码stderr
+        if result.stderr:
+            for encoding in encodings_to_try:
+                try:
+                    stderr_decoded = result.stderr.decode(encoding)
+                    break
+                except UnicodeDecodeError:
+                    continue
+
+            if stderr_decoded is None:
+                stderr_decoded = result.stderr.decode('utf-8', errors='replace')
+
+        # 创建新的结果对象
+        result = subprocess.CompletedProcess(
+            args=result.args,
+            returncode=result.returncode,
+            stdout=stdout_decoded,
+            stderr=stderr_decoded
+        )
+
+        # 如果启用了调试，打印编码信息
+        if encoding_used and os.environ.get('GIT_AI_COMMIT_DEBUG'):
+            print(f"DEBUG: 使用编码 {encoding_used} 解码命令输出: {' '.join(cmd)}")
+
+    # 检查返回码
+    if check and result.returncode != 0:
+        raise subprocess.CalledProcessError(
+            result.returncode,
+            cmd,
+            output=result.stdout,
+            stderr=result.stderr
+        )
+
+    return result
+
+
 def is_git_repository(path: str) -> bool:
     """
     检查路径是否为Git仓库
-    
+
     Args:
         path: 要检查的路径
-    
+
     Returns:
         是否为Git仓库
     """
     try:
-        result = subprocess.run(
+        result = safe_subprocess_run(
             ['git', 'rev-parse', '--git-dir'],
             cwd=path,
             capture_output=True,
-            text=True,
             timeout=5
         )
         return result.returncode == 0

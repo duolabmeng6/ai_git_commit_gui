@@ -5,7 +5,7 @@
 
 set -e  # 遇到错误立即退出
 
-echo "🚀 开始发布 Git AI Commit v0.2.0..."
+echo "🚀 开始发布 Git AI Commit v0.2.1..."
 
 # 检查当前版本
 echo "📋 检查当前版本..."

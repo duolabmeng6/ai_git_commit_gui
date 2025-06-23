@@ -1,28 +1,28 @@
-# GitHub Release v0.2.0 发布说明
+# GitHub Release v0.2.1 发布说明
 
-## 🎉 Git AI Commit v0.2.0 发布
+## 🎉 Git AI Commit v0.2.1 发布
 
 ### 📋 版本信息
-- **版本号**: v0.2.0
+- **版本号**: v0.2.1
 - **发布日期**: 2025-06-23
 - **兼容性**: Python 3.12+
 
 ### ✨ 主要更新
 
-#### 🔄 升级改进
-- 优化了包构建流程
-- 改进了版本管理机制
-- 增强了用户升级体验
+#### 🐛 重要修复
+- **修复Windows编码问题**: 解决了Windows环境下`UnicodeDecodeError: 'gbk' codec can't decode byte 0xa7`错误
+- **增强跨平台兼容性**: 添加了智能编码检测和多编码支持
+- **改进错误处理**: 提供更好的编码错误处理和调试信息
 
-#### 📚 文档完善
-- 新增 `UPGRADE_GUIDE.md` 升级指南
-- 更新 `README.md` 添加升级说明
-- 完善了构建和发布文档
+#### 🔧 技术改进
+- 新增 `safe_subprocess_run()` 函数，支持UTF-8、GBK、GB2312等多种编码
+- 优化了所有Git命令调用的编码处理
+- 增强了Windows中文环境下的稳定性
 
-#### 🛠️ 开发体验
-- 添加了自动化发布脚本 `publish.sh`
-- 优化了构建配置
-- 改进了测试流程
+#### 🚀 自动模式优化
+- 修复了`--auto`模式在Windows环境下的编码问题
+- 提升了自动提交流程的可靠性
+- 改进了错误信息的显示
 
 ### 🚀 升级方法
 
@@ -44,8 +44,8 @@ uv sync
 
 ### 📦 下载
 
-- **Wheel包**: `git_ai_commit_gui-0.2.0-py3-none-any.whl`
-- **源码包**: `git_ai_commit_gui-0.2.0.tar.gz`
+- **Wheel包**: `git_ai_commit_gui-0.2.1-py3-none-any.whl`
+- **源码包**: `git_ai_commit_gui-0.2.1.tar.gz`
 
 ### 🔗 相关链接
 
@@ -67,4 +67,4 @@ uv sync
 
 ---
 
-**完整更新日志**: https://github.com/duolabmeng6/ai_git_commit_gui/compare/v0.1.1...v0.2.0
+**完整更新日志**: https://github.com/duolabmeng6/ai_git_commit_gui/compare/v0.2.0...v0.2.1
